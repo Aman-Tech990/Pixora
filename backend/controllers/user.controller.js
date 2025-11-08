@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/";   // assuming your model path
+import getDataUri from "../utils/dataURI.js";
+import cloudinary from "../utils/cloudinary.js"
 
 // REGISTER
 export const registerUser = async (req, res) => {
@@ -143,10 +145,37 @@ export const getProfile = async (req, res) => {
 }
 
 // EDIT PROFILE
-const editProfile = async () => {
+export const editProfile = async () => {
     try {
-        const { } = req.id;
-        
+        const userId = req.id;
+        const { bio, gender } = req.body;
+        const profilePicture = req.file;
+
+        let cloudResponse;
+        if (profilePicture) {
+            const fileUri = getDataUri(profilePicture);
+            cloudResponse = await cloudinary.uploader.upload(fileUri);
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found!"
+            });
+        }
+
+        if (bio) user?.bio = bio;
+        if (gender) user?.gender = gender;
+        if (profilePicture) user.profilePicture = cloudResponse.secure_url;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully!",
+            user
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -155,3 +184,4 @@ const editProfile = async () => {
         });
     }
 }
+
