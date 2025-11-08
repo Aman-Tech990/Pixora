@@ -39,7 +39,7 @@ export const registerUser = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: "Server error",
+            message: "Intenal server error",
             error: err.message
         });
     }
@@ -62,15 +62,15 @@ export const login = async (req, res) => {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User doesn't exist!"
+                message: "Incorrect email or password!"
             });
         }
 
-        const match = await bcrypt.compare(password, user.password);
+        const match = await bcrypt.compare(password, user?.password);
         if (!match) {
             return res.status(401).json({
                 success: false,
-                message: "Incorrect password!"
+                message: "Incorrect email or password!"
             });
         }
 
@@ -95,7 +95,7 @@ export const login = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: "Server error",
+            message: "Internal server error",
             error: err.message
         });
     }
@@ -115,3 +115,43 @@ export const logout = async (req, res) => {
             message: "User logged out successfully!"
         });
 };
+
+
+// GET PROFILE
+export const getProfile = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found!"
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "User fetched successfully!",
+            user
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: true,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// EDIT PROFILE
+const editProfile = async () => {
+    try {
+        const { } = req.id;
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
