@@ -185,3 +185,27 @@ export const editProfile = async () => {
     }
 }
 
+// GET SUGGESTED USER
+export const getSuggestedUser = async () => {
+    try {
+        const suggestedUser = await User.find({ _id: { $ne: req.id } }).select("-password");
+        if (!suggestedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "No users found!"
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Users fetched successfully!",
+            suggestedUser
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
