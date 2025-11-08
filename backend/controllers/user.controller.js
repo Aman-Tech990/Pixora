@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User from "../models/";   // assuming your model path
+import User from "../models/user.model.js";
 import getDataUri from "../utils/dataURI.js";
 import cloudinary from "../utils/cloudinary.js"
 
@@ -145,7 +145,7 @@ export const getProfile = async (req, res) => {
 }
 
 // EDIT PROFILE
-export const editProfile = async () => {
+export const editProfile = async (req, res) => {
     try {
         const userId = req.id;
         const { bio, gender } = req.body;
@@ -186,7 +186,7 @@ export const editProfile = async () => {
 }
 
 // GET SUGGESTED USER
-export const getSuggestedUser = async () => {
+export const getSuggestedUser = async (req, res) => {
     try {
         const suggestedUser = await User.find({ _id: { $ne: req.id } }).select("-password");
         if (!suggestedUser) {
@@ -209,3 +209,55 @@ export const getSuggestedUser = async () => {
     }
 }
 
+// FOLLOW AND UNFOLLOW LOGIC
+export const followOrUnfollow = async (req, res) => {
+    try {
+        const followedBy = req.id;
+        const followedTo = req.params.id;
+
+        if (followedBy === followedTo) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot follow or unfollow yourself!"
+            });
+        }
+
+        const user = await User.findById(followedBy);
+        const targetUser = await User.findById(followedTo);
+
+        if (!user || !targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found!"
+            });
+        }
+
+        // Main Logic 
+        const isFollowing = user.following.includes(followedTo);
+        if (isFollowing) {
+            await Promise.all([
+                User.updateOne({ _id: followedBy }, { $pull: { following: followedTo } }),
+                User.updateOne({ _id: followedTo }, { $pull: { followers: followedBy } })
+            ]);
+            return res.status(200).json({
+                success: true,
+                message: "Unfollowed Successfully!"
+            });
+        } else {
+            await Promise.all([
+                User.updateOne({ _id: followedBy }, { $push: { following: followedTo } }),
+                User.updateOne({ _id: followedTo }, { $push: { followers: followedBy } })
+            ]);
+            return res.status(200).json({
+                success: true,
+                message: "Followed Successfully!"
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
