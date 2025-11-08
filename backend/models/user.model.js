@@ -31,8 +31,16 @@ const userSchema = mongoose.Schema({
     }],
     following: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: User
+        ref: "User"
     }],
-}, { timeStamps: true });
+    posts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post"
+    }],
+    bookmarks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post"
+    }],
+}, { timestamps: true });
 
 export const User = mongoose.model("User", userSchema);
