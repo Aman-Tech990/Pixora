@@ -199,7 +199,7 @@ export const postComment = async (req, res) => {
 export const fetchParticularPostComment = async (req, res) => {
     try {
         const postId = req.params.id;
-        const comments = (await Comment.find(postId)).toSorted({ createdAt: -1 }).populate({ path: "author", select: "username profilePicture" });
+        const comments = (await Comment.find({ post: postId })).toSorted({ createdAt: -1 }).populate({ path: "author", select: "username profilePicture" });
 
         if (!comments) {
             return res.status(404).json({
@@ -227,7 +227,7 @@ export const deletePost = async (req, res) => {
         const postId = req.params.id;
         const authorId = req.id;
 
-        const post = Post.findById(postId);
+        const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({
                 success: false,
@@ -246,18 +246,10 @@ export const deletePost = async (req, res) => {
         // Delete Post
         await Post.findByIdAndDelete(postId);
 
-        // Find the author of the post
-        const user = User.findById(authorId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found!"
-            });
-        }
-
         // Remove postId from user
-        user.post({ $pull: { $eq: postId } });
-        user.save();
+        await User.findByIdAndUpdate(authorId, {
+            $pull: { posts: postId }
+        });
 
         // Remove comments from post
         await Comment.deleteMany({ post: { $eq: postId } });
