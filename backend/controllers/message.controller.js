@@ -6,15 +6,23 @@ export const sendMessage = async (req, res) => {
     try {
         const senderId = req.id;
         const receiverId = req.params.id;
-        const { message } = req.id;
+        const { message } = req.body;
+
+        if (!message || !message.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Message cannot be empty!"
+            });
+        }
 
         let conversation = await Conversation.findOne({
-            participants: { $all: { senderId, receiverId } }
+            participants: { $all: [senderId, receiverId] }
         });
 
         if (!conversation) {
             conversation = await Conversation.create({
                 participants: [senderId, receiverId],
+                messages: []
             });
         }
 
@@ -49,9 +57,9 @@ export const getMessage = async (req, res) => {
     try {
         const senderId = req.id;
         const receiverId = req.params.id;
-        const conversation = await Conversation.find({
-            participants: { $all: { senderId, receiverId } }
-        });
+        const conversation = await Conversation.findOne({
+            participants: { $all: [senderId, receiverId] }
+        }).populate({ path: "messages" });
         if (!conversation) {
             return res.status(200).json({
                 success: true,
@@ -60,7 +68,7 @@ export const getMessage = async (req, res) => {
         }
         return res.status(200).json({
             success: true,
-            message: conversation?.messages
+            message: conversation.messages
         });
     } catch (error) {
         console.log(error);
