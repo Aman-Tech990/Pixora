@@ -4,6 +4,8 @@ import cors from "cors";
 import connectDB from "./database/connectDB.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.routes.js";
+import postRoutes from "./routes/post.route.js";
+import messageRoutes from "./routes/message.route.js";
 
 // Setting up .env
 if (process.env.NODE_ENV !== "production") {
@@ -31,6 +33,8 @@ app.use(cookieParser());
 
 // REST APIs
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/user", postRoutes);
+app.use("/api/v1/user", messageRoutes);
 
 // App Entry Point
 app.listen(port, () => {

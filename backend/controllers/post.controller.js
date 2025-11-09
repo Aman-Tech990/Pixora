@@ -70,7 +70,7 @@ export const fetchAllPost = async (req, res) => {
 }
 
 // FETCH ALL USER POST
-export const fetchUserPost = async (req, res) => {
+export const fetchAllUserPost = async (req, res) => {
     try {
         const authorId = req.id;
         const posts = await Post.find({ author: { $eq: authorId } }).sort({ createdAt: -1 }).populate({ path: "author", select: "username profilePicture" }).populate({ path: "comments", sort: { createdAt: -1 }, populate: { path: "author", select: "username profilePicture" } });
