@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+import { User } from "../models/user.model.js";
 import getDataUri from "../utils/dataURI.js";
 import cloudinary from "../utils/cloudinary.js"
 
@@ -49,7 +49,7 @@ export const registerUser = async (req, res) => {
 
 
 // LOGIN
-export const login = async (req, res) => {
+export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -105,7 +105,7 @@ export const login = async (req, res) => {
 
 
 // LOGOUT
-export const logout = async (req, res) => {
+export const logoutUser = async (req, res) => {
     return res
         .status(200)
         .cookie("token", "", {
@@ -123,7 +123,7 @@ export const logout = async (req, res) => {
 export const getProfile = async (req, res) => {
     try {
         const userId = req.params.id;
-        const user = User.findById(userId);
+        const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -165,8 +165,8 @@ export const editProfile = async (req, res) => {
             });
         }
 
-        if (bio) user?.bio = bio;
-        if (gender) user?.gender = gender;
+        if (bio) user.bio = bio;
+        if (gender) user.gender = gender;
         if (profilePicture) user.profilePicture = cloudResponse.secure_url;
 
         await user.save();
