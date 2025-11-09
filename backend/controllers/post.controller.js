@@ -4,6 +4,7 @@ import getDataUri from "../utils/dataURI";
 import cloudinary from "../utils/cloudinary.js";
 import { Post } from "../models/post.model.js";
 
+// CREATE NEW POST
 export const addNewPost = async (req, res) => {
     try {
         const { caption } = req.body;
@@ -48,6 +49,7 @@ export const addNewPost = async (req, res) => {
     }
 }
 
+// FETCH ALL POSTS
 export const getAllPost = async (req, res) => {
     try {
         const allPosts = await Post.find().sort({ createdAt: -1 })
@@ -67,6 +69,7 @@ export const getAllPost = async (req, res) => {
     }
 }
 
+// FETCH ALL USER POST
 export const getUserPost = async (req, res) => {
     try {
         const authorId = req.id;
@@ -81,6 +84,68 @@ export const getUserPost = async (req, res) => {
             success: true,
             message: "User post fetched successfully!",
             posts
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// LIKE POST
+export const likePost = async (req, res) => {
+    try {
+        const userToLike = req.id;
+        const postId = req.params.id;
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found!"
+            });
+        }
+        // Main Like Logic
+        await post.updateOne({ $addToSet: { likes: userToLike } });
+        await post.save();
+
+        // Socket.io implementation
+
+        return res.status(200).json({
+            success: true,
+            message: "Post liked successfully!"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// DISLIKE POST
+export const disikePost = async (req, res) => {
+    try {
+        const userToDislike = req.id;
+        const postId = req.params.id;
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found!"
+            });
+        }
+        // Main Like Logic
+        await post.updateOne({ $pull: { likes: userToDislike } });
+        await post.save();
+
+        // Socket.io implementation
+
+        return res.status(200).json({
+            success: true,
+            message: "Post disliked successfully!"
         });
     } catch (error) {
         console.log(error);
