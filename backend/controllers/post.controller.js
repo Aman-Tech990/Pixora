@@ -221,3 +221,57 @@ export const fetchParticularPostComment = async (req, res) => {
     }
 }
 
+// Delete post
+export const deletePost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const authorId = req.id;
+
+        const post = Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found!"
+            });
+        }
+
+        // Authorize the user
+        if (post.author.toString() !== authorId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized user!"
+            });
+        }
+
+        // Delete Post
+        await Post.findByIdAndDelete(postId);
+
+        // Find the author of the post
+        const user = User.findById(authorId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found!"
+            });
+        }
+
+        // Remove postId from user
+        user.post({ $pull: { $eq: postId } });
+        user.save();
+
+        // Remove comments from post
+        await Comment.deleteMany({ post: { $eq: postId } });
+
+        // Success JSON Response
+        return res.status(200).json({
+            success: true,
+            message: "Post deleted successfully!"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
