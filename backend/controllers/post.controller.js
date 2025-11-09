@@ -50,7 +50,7 @@ export const addNewPost = async (req, res) => {
 }
 
 // FETCH ALL POSTS
-export const getAllPost = async (req, res) => {
+export const fetchAllPost = async (req, res) => {
     try {
         const allPosts = await Post.find().sort({ createdAt: -1 })
             .populate({ path: "author", select: "username profilePicture" })
@@ -70,7 +70,7 @@ export const getAllPost = async (req, res) => {
 }
 
 // FETCH ALL USER POST
-export const getUserPost = async (req, res) => {
+export const fetchUserPost = async (req, res) => {
     try {
         const authorId = req.id;
         const posts = await Post.find({ author: { $eq: authorId } }).sort({ createdAt: -1 }).populate({ path: "author", select: "username profilePicture" }).populate({ path: "comments", sort: { createdAt: -1 }, populate: { path: "author", select: "username profilePicture" } });
@@ -157,7 +157,7 @@ export const disikePost = async (req, res) => {
 }
 
 // COMMENT ON POST
-export const addComment = async (req, res) => {
+export const postComment = async (req, res) => {
     try {
         const postId = req.params.id;
         const userToComment = req.id;
@@ -185,6 +185,32 @@ export const addComment = async (req, res) => {
             success: true,
             message: "Comment added successfully!",
             comment
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// Fetch comments for a particular post
+export const fetchParticularPostComment = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const comments = (await Comment.find(postId)).toSorted({ createdAt: -1 }).populate({ path: "author", select: "username profilePicture" });
+
+        if (!comments) {
+            return res.status(404).json({
+                success: false,
+                message: "No comments found!"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Comments fetched successfully!"
         });
     } catch (error) {
         console.log(error);
