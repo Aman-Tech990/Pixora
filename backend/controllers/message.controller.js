@@ -33,7 +33,34 @@ export const sendMessage = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            newMessage
+            message: newMessage
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// GET MESSAGE
+export const getMessage = async (req, res) => {
+    try {
+        const senderId = req.id;
+        const receiverId = req.params.id;
+        const conversation = await Conversation.find({
+            participants: { $all: { senderId, receiverId } }
+        });
+        if (!conversation) {
+            return res.status(200).json({
+                success: true,
+                message: []
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: conversation?.messages
         });
     } catch (error) {
         console.log(error);
