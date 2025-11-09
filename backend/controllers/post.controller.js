@@ -199,7 +199,9 @@ export const postComment = async (req, res) => {
 export const fetchParticularPostComment = async (req, res) => {
     try {
         const postId = req.params.id;
-        const comments = (await Comment.find({ post: postId })).toSorted({ createdAt: -1 }).populate({ path: "author", select: "username profilePicture" });
+        const comments = await Comment.find({ post: postId })
+            .sort({ createdAt: -1 })
+            .populate({ path: "author", select: "username profilePicture" });
 
         if (!comments) {
             return res.status(404).json({
@@ -210,7 +212,8 @@ export const fetchParticularPostComment = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Comments fetched successfully!"
+            message: "Comments fetched successfully!",
+            comments
         });
     } catch (error) {
         console.log(error);
@@ -258,6 +261,53 @@ export const deletePost = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Post deleted successfully!"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// BOOKMARK OR UNBOOKMARK POST
+export const bookmarkPost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const userId = req.id;
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found!"
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found!"
+            });
+        }
+
+        const alreadyBookmarked = user.bookmarks.includes(postId);
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            alreadyBookmarked
+                ? { $pull: { bookmarks: postId } }
+                : { $push: { bookmarks: postId } },
+            { new: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: alreadyBookmarked
+                ? "Post unbookmarked successfully!"
+                : "Post bookmarked successfully!",
+            bookmarks: updatedUser.bookmarks
         });
     } catch (error) {
         console.log(error);
