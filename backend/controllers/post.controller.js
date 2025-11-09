@@ -1,6 +1,6 @@
 import { User } from "../models/user.model.js";
 import sharp from "sharp";
-import getDataUri from "../utils/dataURI";
+import { Comment } from "../models/comment.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import { Post } from "../models/post.model.js";
 
@@ -146,6 +146,45 @@ export const disikePost = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Post disliked successfully!"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!"
+        });
+    }
+}
+
+// COMMENT ON POST
+export const addComment = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const userToComment = req.id;
+        const { text } = req.body;
+
+        if (!text) {
+            return res.status(400).json({
+                success: false,
+                message: "Text is required!"
+            });
+        }
+
+        const post = await Post.findById(postId);
+
+        const comment = await Comment.create({
+            text,
+            author: userToComment,
+            post: postId
+        }).populate({ path: "author", select: "username profilePicture" }, { new: true });
+
+        post.comments.push(comment._id);
+        await post.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Comment added successfully!",
+            comment
         });
     } catch (error) {
         console.log(error);
